@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  name       String?
+  image      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  coupleId   String?
+  couple     Couple?  @relation(fields: [coupleId], references: [id], onDelete: SetNull)
+
+  overrides  CalendarOverride[]
+}
+
+model Couple {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+
+  members    User[]
+  schedule   Schedule?
+  overrides  CalendarOverride[]
+}
+
+model Schedule {
+  id                String   @id @default(cuid())
+  coupleId          String   @unique
+  couple            Couple   @relation(fields: [coupleId], references: [id], onDelete: Cascade)
+
+  raoBaseDate       String
+  raoBaseCycleDay   Int      @default(7)
+  raoCycleLength    Int      @default(9)
+  raoDayShiftDays   Int      @default(4)
+  raoNightShiftDays Int      @default(3)
+  raoRestDays       Int      @default(2)
+
+  liRestType        String   @default("weekend_and_holiday")
+
+  updatedAt         DateTime @updatedAt
+}
+
+model CalendarOverride {
+  id          String   @id @default(cuid())
+  coupleId    String
+  couple      Couple   @relation(fields: [coupleId], references: [id], onDelete: Cascade)
+
+  date        String
+  status      String
+
+  createdBy   String?
+  user        User?    @relation(fields: [createdBy], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([coupleId, date])
+  @@index([coupleId, date])
+}
+
+model Holiday {
+  id          String   @id @default(cuid())
+  date        String   @unique
+  name        String
+  type        String
+  year        Int
+
+  @@index([year])
+}

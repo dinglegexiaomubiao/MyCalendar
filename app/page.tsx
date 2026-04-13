@@ -1,124 +1,18 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Solar } from 'lunar-javascript';
-
-// 2026年法定节假日
-const holidays2026: Record<string, string> = {
-  '2026-01-01': '元旦', '2026-01-02': '元旦', '2026-01-03': '元旦',
-  '2026-02-15': '春节', '2026-02-16': '春节', '2026-02-17': '春节',
-  '2026-02-18': '春节', '2026-02-19': '春节', '2026-02-20': '春节',
-  '2026-02-21': '春节', '2026-02-22': '春节', '2026-02-23': '春节',
-  '2026-04-04': '清明节', '2026-04-05': '清明节', '2026-04-06': '清明节',
-  '2026-05-01': '劳动节', '2026-05-02': '劳动节', '2026-05-03': '劳动节',
-  '2026-05-04': '劳动节', '2026-05-05': '劳动节',
-  '2026-06-19': '端午节', '2026-06-20': '端午节', '2026-06-21': '端午节',
-  '2026-09-25': '中秋节', '2026-09-26': '中秋节', '2026-09-27': '中秋节',
-  '2026-10-01': '国庆节', '2026-10-02': '国庆节', '2026-10-03': '国庆节',
-  '2026-10-04': '国庆节', '2026-10-05': '国庆节', '2026-10-06': '国庆节',
-  '2026-10-07': '国庆节'
-};
-
-// 调休上班日
-const workdays2026: Record<string, string> = {
-  '2026-01-04': '元旦调休',
-  '2026-02-14': '春节调休',
-  '2026-02-28': '春节调休',
-  '2026-05-09': '劳动节调休',
-  '2026-09-20': '国庆调休',
-  '2026-10-10': '国庆调休'
-};
-
-// 基准日期：2026年4月8日是饶的第7天（晚班第3天）
-const baseDate = new Date(2026, 3, 8);
+import { useCalendar, useOverrideMutations } from '@/hooks/useCalendar';
+import { CalendarCell, filterNames, getRaoCycleDay, getRaoShiftType } from '@/lib/calendar-logic';
 
 const today = new Date();
-
-const filterNames: Record<string, string> = {
-  'rao-day': '饶白班',
-  'rao-night': '饶晚班',
-  'rao-rest': '饶休息日',
-  'li-rest': '李休息日',
-  'both-rest': '两人同休'
-};
-
-function formatDateKey(date: Date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-}
-
-function getRaoCycleDay(date: Date) {
-  const targetDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const diffTime = targetDate.getTime() - baseDate.getTime();
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-  const cycleDay = ((diffDays + 6) % 9 + 9) % 9 + 1;
-  return cycleDay;
-}
-
-function getRaoShiftType(date: Date) {
-  const cycleDay = getRaoCycleDay(date);
-  if (cycleDay >= 1 && cycleDay <= 4) return 'day';   // 白班
-  if (cycleDay >= 5 && cycleDay <= 7) return 'night'; // 晚班
-  return 'rest'; // 休息（第8-9天）
-}
-
-function isLiRestDay(date: Date) {
-  const day = date.getDay();
-  const dateStr = formatDateKey(date);
-  if (workdays2026[dateStr]) return false;
-  if (day === 0 || day === 6) return true;
-  if (holidays2026[dateStr]) return true;
-  return false;
-}
-
-function getDayStatus(date: Date, manualEdits: Record<string, string>) {
-  const dateStr = formatDateKey(date);
-  if (Object.prototype.hasOwnProperty.call(manualEdits, dateStr)) {
-    return manualEdits[dateStr];
-  }
-  const shiftType = getRaoShiftType(date);
-  const liRest = isLiRestDay(date);
-  if (shiftType === 'rest') {
-    return liRest ? 'both-rest' : 'rao-rest';
-  }
-  if (liRest) {
-    return 'li-rest';
-  }
-  if (shiftType === 'day') return 'rao-day';
-  if (shiftType === 'night') return 'rao-night';
-  return 'rao-day';
-}
-
-function shouldHighlight(date: Date, status: string, activeFilters: string[]) {
-  if (activeFilters.length === 0) return true;
-  const shiftType = getRaoShiftType(date);
-  for (const filter of activeFilters) {
-    if (filter === status) return true;
-    if (filter === 'rao-day' && shiftType === 'day') return true;
-    if (filter === 'rao-night' && shiftType === 'night') return true;
-    if (filter === 'rao-rest' && (status === 'rao-rest' || status === 'both-rest')) return true;
-    if (filter === 'li-rest' && (status === 'li-rest' || status === 'both-rest')) return true;
-  }
-  return false;
-}
-
-function getLunarDate(date: Date) {
-  const solar = Solar.fromYmd(date.getFullYear(), date.getMonth() + 1, date.getDate());
-  const lunar = solar.getLunar();
-  const day = lunar.getDayInChinese();
-  if (day === '初一') {
-    return lunar.getMonthInChinese() + '月';
-  }
-  return day;
-}
 
 export default function HomePage() {
   const [displayDate, setDisplayDate] = useState<Date>(new Date(today.getFullYear(), today.getMonth(), 1));
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
-  const [manualEdits, setManualEdits] = useState<Record<string, string>>({});
 
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [currentModalDate, setCurrentModalDate] = useState<Date | null>(null);
+  const [currentModalDate, setCurrentModalDate] = useState<string | null>(null);
   const [currentModalStatus, setCurrentModalStatus] = useState<string | null>(null);
   const [editSelectedStatus, setEditSelectedStatus] = useState<string | null>(null);
 
@@ -132,13 +26,32 @@ export default function HomePage() {
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
 
-  const todayStr = formatDateKey(today);
+  const year = displayDate.getFullYear();
+  const month = displayDate.getMonth() + 1;
+
+  const { data, isLoading } = useCalendar(year, month);
+  const { saveOverride, deleteOverride, revalidateCalendar } = useOverrideMutations(data?.coupleId);
+
+  const cells = useMemo(() => {
+    if (!data) return [];
+    if (activeFilters.length === 0) return data.cells;
+    return data.cells.map((cell) => ({
+      ...cell,
+      highlighted: shouldHighlightFromCell(cell, activeFilters),
+      dimmed: activeFilters.length > 0 && !shouldHighlightFromCell(cell, activeFilters),
+    }));
+  }, [data, activeFilters]);
+
+  const currentCell = useMemo(() => {
+    if (!currentModalDate || !data) return null;
+    return data.cells.find((c) => c.date === currentModalDate) || null;
+  }, [currentModalDate, data]);
 
   const showToast = (message: string) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast({ visible: true, message });
     toastTimerRef.current = setTimeout(() => {
-      setToast(prev => ({ ...prev, visible: false }));
+      setToast((prev) => ({ ...prev, visible: false }));
     }, 2000);
   };
 
@@ -165,9 +78,9 @@ export default function HomePage() {
   };
 
   const toggleFilter = (filter: string) => {
-    setActiveFilters(prev => {
+    setActiveFilters((prev) => {
       if (prev.includes(filter)) {
-        return prev.filter(f => f !== filter);
+        return prev.filter((f) => f !== filter);
       }
       return [...prev, filter];
     });
@@ -177,8 +90,8 @@ export default function HomePage() {
     setActiveFilters([]);
   };
 
-  const openViewModal = (date: Date, status: string) => {
-    setCurrentModalDate(date);
+  const openViewModal = (dateStr: string, status: string) => {
+    setCurrentModalDate(dateStr);
     setCurrentModalStatus(status);
     setViewModalOpen(true);
   };
@@ -189,10 +102,8 @@ export default function HomePage() {
 
   const openEditModal = () => {
     setViewModalOpen(false);
-    if (currentModalDate && currentModalStatus) {
-      const dateStr = formatDateKey(currentModalDate);
-      const status = manualEdits[dateStr] || currentModalStatus;
-      setEditSelectedStatus(status);
+    if (currentModalStatus) {
+      setEditSelectedStatus(currentModalStatus);
       setEditModalOpen(true);
     }
   };
@@ -201,30 +112,43 @@ export default function HomePage() {
     setEditSelectedStatus(status);
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editSelectedStatus || !currentModalDate) {
       showToast('请选择一个状态');
       return;
     }
-    const dateStr = formatDateKey(currentModalDate);
-    setManualEdits(prev => ({ ...prev, [dateStr]: editSelectedStatus }));
-    setEditModalOpen(false);
-    showToast('已保存修改');
+    try {
+      await saveOverride(currentModalDate, editSelectedStatus as CalendarCell['status']);
+      await revalidateCalendar(year, month);
+      // Also revalidate adjacent months in case cross-month grid is affected
+      const prevMonth = new Date(displayDate);
+      prevMonth.setMonth(prevMonth.getMonth() - 1);
+      await revalidateCalendar(prevMonth.getFullYear(), prevMonth.getMonth() + 1);
+      const nextMonth = new Date(displayDate);
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      await revalidateCalendar(nextMonth.getFullYear(), nextMonth.getMonth() + 1);
+      setEditModalOpen(false);
+      showToast('已保存修改');
+    } catch {
+      showToast('保存失败，请重试');
+    }
   };
 
-  const clearManualEdit = () => {
+  const clearManualEdit = async () => {
     if (!currentModalDate) return;
-    const dateStr = formatDateKey(currentModalDate);
-    if (Object.prototype.hasOwnProperty.call(manualEdits, dateStr)) {
-      setManualEdits(prev => {
-        const next = { ...prev };
-        delete next[dateStr];
-        return next;
-      });
+    try {
+      await deleteOverride(currentModalDate);
+      await revalidateCalendar(year, month);
+      const prevMonth = new Date(displayDate);
+      prevMonth.setMonth(prevMonth.getMonth() - 1);
+      await revalidateCalendar(prevMonth.getFullYear(), prevMonth.getMonth() + 1);
+      const nextMonth = new Date(displayDate);
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      await revalidateCalendar(nextMonth.getFullYear(), nextMonth.getMonth() + 1);
       setEditModalOpen(false);
       showToast('已恢复自动计算');
-    } else {
-      showToast('当前为自动计算，无需恢复');
+    } catch {
+      showToast('恢复失败，请重试');
     }
   };
 
@@ -265,104 +189,33 @@ export default function HomePage() {
     };
   }, [displayDate]);
 
-  const { cells, monthYearText, filterInfoText, filterInfoActive } = useMemo(() => {
-    const year = displayDate.getFullYear();
-    const month = displayDate.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const startOffset = (firstDay.getDay() + 6) % 7;
-    const startDate = new Date(firstDay);
-    startDate.setDate(startDate.getDate() - startOffset);
+  const monthYearText = `${year}年${month}月`;
 
-    const cellsData: {
-      date: Date;
-      dateStr: string;
-      status: string;
-      cycleDay: number;
-      shiftType: string;
-      isCurrentMonth: boolean;
-      isToday: boolean;
-      isManualEdit: boolean;
-      tags: string;
-      highlighted: boolean;
-      dimmed: boolean;
-    }[] = [];
-
-    for (let i = 0; i < 40; i++) {
-      const cellDate = new Date(startDate);
-      cellDate.setDate(startDate.getDate() + i);
-      const dateStr = formatDateKey(cellDate);
-      const status = getDayStatus(cellDate, manualEdits);
-      const cycleDay = getRaoCycleDay(cellDate);
-      const shiftType = getRaoShiftType(cellDate);
-      const isCurrentMonth = cellDate.getMonth() === month;
-      const isToday = dateStr === todayStr;
-      const isManualEdit = Object.prototype.hasOwnProperty.call(manualEdits, dateStr);
-      const highlighted = activeFilters.length > 0 && shouldHighlight(cellDate, status, activeFilters);
-      const dimmed = activeFilters.length > 0 && !highlighted;
-
-      let tags = '';
-      if (status === 'both-rest') {
-        tags += `<div class="day-tag">同休</div>`;
-      } else if (holidays2026[dateStr]) {
-        tags += `<div class="day-tag">节</div>`;
-      } else if (workdays2026[dateStr]) {
-        tags += `<div class="day-tag">班</div>`;
-      }
-
-      if (!isManualEdit && (status === 'rao-day' || status === 'rao-night' ||
-        (status === 'li-rest' && shiftType !== 'rest'))) {
-        const shiftText = shiftType === 'day' ? '白' : (shiftType === 'night' ? '晚' : '');
-        if (shiftText) {
-          tags += `<div class="day-tag" style="color:#666">${shiftText}</div>`;
-        }
-      }
-
-      cellsData.push({
-        date: cellDate,
-        dateStr,
-        status,
-        cycleDay,
-        shiftType,
-        isCurrentMonth,
-        isToday,
-        isManualEdit,
-        tags,
-        highlighted,
-        dimmed
-      });
+  const filterInfoText = useMemo(() => {
+    if (activeFilters.length === 0) {
+      return '点击上方按钮可多选筛选，显示所有选中状态的日期';
     }
+    const selectedNames = activeFilters.map((f) => filterNames[f]).join('、');
+    return `当前筛选：${selectedNames}（${activeFilters.length}项）- 白/晚班筛选包含所有对应班次`;
+  }, [activeFilters]);
 
-    let filterInfoText = '点击上方按钮可多选筛选，显示所有选中状态的日期';
-    let filterInfoActive = false;
-    if (activeFilters.length > 0) {
-      const selectedNames = activeFilters.map(f => filterNames[f]).join('、');
-      filterInfoText = `当前筛选：${selectedNames}（${activeFilters.length}项）- 白/晚班筛选包含所有对应班次`;
-      filterInfoActive = true;
-    }
-
-    return {
-      cells: cellsData,
-      monthYearText: `${year}年${month + 1}月`,
-      filterInfoText,
-      filterInfoActive
-    };
-  }, [displayDate, activeFilters, manualEdits]);
+  const filterInfoActive = activeFilters.length > 0;
 
   const viewModalContent = useMemo(() => {
-    if (!currentModalDate || !currentModalStatus) return null;
-    const dateStr = formatDateKey(currentModalDate);
+    if (!currentCell || !data) return null;
+    const dateStr = currentCell.date;
     const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-    const dayOfWeek = currentModalDate.getDay();
-    const isManual = Object.prototype.hasOwnProperty.call(manualEdits, dateStr);
-    const cycleDay = getRaoCycleDay(currentModalDate);
-    const shiftType = getRaoShiftType(currentModalDate);
+    const dayOfWeek = new Date(dateStr).getDay();
+    const isManual = currentCell.isOverride;
+    const cycleDay = getRaoCycleDay(dateStr, data.schedule);
+    const shiftType = getRaoShiftType(dateStr, data.schedule);
 
     let statusText = '';
     let statusBg = '';
     let statusColor = '#ffffff';
     let detailText = '';
 
-    switch (currentModalStatus) {
+    switch (currentCell.status) {
       case 'both-rest':
         statusText = '两人同休';
         statusBg = '#2d5a4e';
@@ -397,15 +250,15 @@ export default function HomePage() {
       statusBg,
       statusColor,
       detailText,
-      cycleInfo: `饶处于9天周期第${cycleDay}天`,
-      isManual
+      cycleInfo: `饶处于${data.schedule.raoCycleLength}天周期第${cycleDay}天`,
+      isManual,
     };
-  }, [currentModalDate, currentModalStatus, manualEdits]);
+  }, [currentCell, data]);
 
   const editModalDateText = useMemo(() => {
     if (!currentModalDate) return '修改日程';
     const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-    return `修改 ${formatDateKey(currentModalDate)} ${weekdays[currentModalDate.getDay()]} 的日程`;
+    return `修改 ${currentModalDate} ${weekdays[new Date(currentModalDate).getDay()]} 的日程`;
   }, [currentModalDate]);
 
   return (
@@ -468,6 +321,9 @@ export default function HomePage() {
       </div>
 
       <div className="calendar-wrapper">
+        {isLoading && !data && (
+          <div style={{ textAlign: 'center', padding: 40, color: '#888' }}>加载中...</div>
+        )}
         <div className="calendar-grid">
           {cells.map((cell) => {
             const classNames = [
@@ -475,17 +331,17 @@ export default function HomePage() {
               `status-${cell.status}`,
               cell.isToday ? 'is-today' : '',
               !cell.isCurrentMonth ? 'other-month' : '',
-              cell.isManualEdit ? 'manual-edit' : '',
+              cell.isOverride ? 'manual-edit' : '',
               cell.highlighted ? 'highlighted' : '',
-              cell.dimmed ? 'dimmed' : ''
+              cell.dimmed ? 'dimmed' : '',
             ].filter(Boolean).join(' ');
 
             return (
               <div
-                key={cell.dateStr}
+                key={cell.date}
                 className={classNames}
                 data-status={cell.status}
-                data-date={cell.dateStr}
+                data-date={cell.date}
                 onClick={() => openViewModal(cell.date, cell.status)}
                 onMouseEnter={(e) => {
                   let text = '';
@@ -496,21 +352,21 @@ export default function HomePage() {
                     case 'rao-day': text = '饶白班'; break;
                     case 'rao-night': text = '饶晚班'; break;
                   }
-                  if (cell.isManualEdit) text += ' (已修改)';
+                  if (cell.isOverride) text += ' (已修改)';
                   setTooltip({
                     visible: true,
-                    text: `${cell.dateStr} · ${text}`,
+                    text: `${cell.date} · ${text}`,
                     x: e.clientX + 10,
                     y: e.clientY - 30
                   });
                 }}
                 onMouseMove={(e) => {
-                  setTooltip(prev => ({ ...prev, x: e.clientX + 10, y: e.clientY - 30 }));
+                  setTooltip((prev) => ({ ...prev, x: e.clientX + 10, y: e.clientY - 30 }));
                 }}
-                onMouseLeave={() => setTooltip(prev => ({ ...prev, visible: false }))}
+                onMouseLeave={() => setTooltip((prev) => ({ ...prev, visible: false }))}
               >
-                <div className="day-number">{cell.date.getDate()}</div>
-                <div className="day-lunar">{getLunarDate(cell.date)}</div>
+                <div className="day-number">{cell.day}</div>
+                <div className="day-lunar">{cell.lunar}</div>
                 <div className="day-tags" dangerouslySetInnerHTML={{ __html: cell.tags }} />
               </div>
             );
@@ -564,7 +420,7 @@ export default function HomePage() {
               { status: 'rao-rest', title: '☕ 饶休息日', desc: '仅饶休息' },
               { status: 'li-rest', title: '📚 李休息日', desc: '仅李休息' },
               { status: 'both-rest', title: '✨ 两人同休', desc: '两人都有空' },
-            ].map(opt => (
+            ].map((opt) => (
               <div
                 key={opt.status}
                 className={`edit-option ${editSelectedStatus === opt.status ? 'selected' : ''}`}
@@ -590,4 +446,15 @@ export default function HomePage() {
       </div>
     </div>
   );
+}
+
+function shouldHighlightFromCell(cell: CalendarCell, activeFilters: string[]): boolean {
+  for (const filter of activeFilters) {
+    if (filter === cell.status) return true;
+    if (filter === 'rao-day' && cell.shiftType === 'day') return true;
+    if (filter === 'rao-night' && cell.shiftType === 'night') return true;
+    if (filter === 'rao-rest' && (cell.status === 'rao-rest' || cell.status === 'both-rest')) return true;
+    if (filter === 'li-rest' && (cell.status === 'li-rest' || cell.status === 'both-rest')) return true;
+  }
+  return false;
 }
