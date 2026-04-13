@@ -4,7 +4,6 @@ import { CalendarCell, DayStatus, ScheduleConfig } from "@/lib/calendar-logic";
 export interface CalendarData {
   year: number;
   month: number;
-  coupleId: string;
   schedule: ScheduleConfig;
   cells: CalendarCell[];
 }
@@ -22,14 +21,14 @@ export function useCalendar(year: number, month: number) {
   };
 }
 
-export function useOverrideMutations(coupleId?: string) {
+export function useOverrideMutations() {
   const { mutate } = useSWRConfig();
 
   async function saveOverride(date: string, status: DayStatus) {
     const res = await fetch("/api/overrides", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ coupleId, date, status }),
+      body: JSON.stringify({ date, status }),
     });
     if (!res.ok) throw new Error("Failed to save override");
     return res.json();
@@ -37,7 +36,6 @@ export function useOverrideMutations(coupleId?: string) {
 
   async function deleteOverride(date: string) {
     const params = new URLSearchParams({ date });
-    if (coupleId) params.set("coupleId", coupleId);
     const res = await fetch(`/api/overrides?${params.toString()}`, {
       method: "DELETE",
     });

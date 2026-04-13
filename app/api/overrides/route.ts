@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { ensureDefaultCouple } from "@/lib/init-default";
 import { DayStatus } from "@/lib/calendar-logic";
 
 const VALID_STATUSES: DayStatus[] = [
@@ -12,9 +12,19 @@ const VALID_STATUSES: DayStatus[] = [
 ];
 
 export async function POST(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "未登录" }, { status: 401 });
+  }
+
+  const coupleId = session.user.coupleId;
+  if (!coupleId) {
+    return NextResponse.json({ error: "未绑定日历组" }, { status: 403 });
+  }
+
   try {
     const body = await request.json();
-    const { coupleId, date, status }: { coupleId?: string; date?: string; status?: string } = body;
+    const { date, status }: { date?: string; status?: string } = body;
 
     if (!date || !status) {
       return NextResponse.json(
@@ -27,16 +37,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
-    let targetCoupleId = coupleId;
-    if (!targetCoupleId) {
-      const defaultCouple = await ensureDefaultCouple();
-      targetCoupleId = defaultCouple.coupleId;
-    }
-
     const override = await prisma.calendarOverride.upsert({
       where: {
         coupleId_date: {
-          coupleId: targetCoupleId,
+          coupleId,
           date,
         },
       },
@@ -44,7 +48,7 @@ export async function POST(request: NextRequest) {
         status,
       },
       create: {
-        coupleId: targetCoupleId,
+        coupleId,
         date,
         status,
       },
@@ -58,24 +62,27 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "未登录" }, { status: 401 });
+  }
+
+  const coupleId = session.user.coupleId;
+  if (!coupleId) {
+    return NextResponse.json({ error: "未绑定日历组" }, { status: 403 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
-    const coupleId = searchParams.get("coupleId") || undefined;
     const date = searchParams.get("date");
 
     if (!date) {
       return NextResponse.json({ error: "Missing date" }, { status: 400 });
     }
 
-    let targetCoupleId = coupleId;
-    if (!targetCoupleId) {
-      const defaultCouple = await ensureDefaultCouple();
-      targetCoupleId = defaultCouple.coupleId;
-    }
-
     await prisma.calendarOverride.deleteMany({
       where: {
-        coupleId: targetCoupleId,
+        coupleId,
         date,
       },
     });

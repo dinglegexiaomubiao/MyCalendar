@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { ensureDefaultCouple } from "@/lib/init-default";
 import { buildMonthCells, DayStatus, formatDateKey } from "@/lib/calendar-logic";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ year: string; month: string }> }
 ) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "未登录" }, { status: 401 });
+  }
+
+  const coupleId = session.user.coupleId;
+  if (!coupleId) {
+    return NextResponse.json({ error: "未绑定日历组" }, { status: 403 });
+  }
+
   const { year: yearStr, month: monthStr } = await params;
   const year = parseInt(yearStr, 10);
   const month = parseInt(monthStr, 10);
@@ -16,9 +26,14 @@ export async function GET(
   }
 
   try {
-    const { coupleId, schedule } = await ensureDefaultCouple();
+    const schedule = await prisma.schedule.findUnique({
+      where: { coupleId },
+    });
 
-    // Fetch overrides for the month range (with buffer for cross-month grid)
+    if (!schedule) {
+      return NextResponse.json({ error: "排班配置不存在" }, { status: 404 });
+    }
+
     const startDate = new Date(year, month - 1, 1);
     const bufferStart = new Date(startDate);
     bufferStart.setDate(bufferStart.getDate() - 7);
@@ -39,11 +54,8 @@ export async function GET(
       overrideMap[o.date] = o.status as DayStatus;
     }
 
-    // Fetch holidays for the year
     const holidays = await prisma.holiday.findMany({
-      where: {
-        year,
-      },
+      where: { year },
     });
 
     const holidayMap: Record<string, { name: string; type: string }> = {};
@@ -51,7 +63,6 @@ export async function GET(
       holidayMap[h.date] = { name: h.name, type: h.type };
     }
 
-    // Also fetch adjacent years' holidays (for cross-month buffer)
     const adjacentHolidays = await prisma.holiday.findMany({
       where: {
         year: { in: [year - 1, year + 1] },
@@ -67,7 +78,7 @@ export async function GET(
     const cells = buildMonthCells(
       year,
       month - 1,
-      schedule,
+      schedule as unknown as Parameters<typeof buildMonthCells>[2],
       overrideMap,
       holidayMap,
       todayStr,

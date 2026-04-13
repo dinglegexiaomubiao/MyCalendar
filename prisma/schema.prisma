@@ -11,6 +11,7 @@ model User {
   id         String   @id @default(cuid())
   email      String   @unique
   name       String?
+  password   String?
   image      String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -23,6 +24,7 @@ model User {
 
 model Couple {
   id         String   @id @default(cuid())
+  inviteCode String?  @unique @default(uuid())
   createdAt  DateTime @default(now())
 
   members    User[]

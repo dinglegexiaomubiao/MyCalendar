@@ -1,12 +1,17 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSession, signOut } from 'next-auth/react';
 import { useCalendar, useOverrideMutations } from '@/hooks/useCalendar';
 import { CalendarCell, filterNames, getRaoCycleDay, getRaoShiftType } from '@/lib/calendar-logic';
 
 const today = new Date();
 
 export default function HomePage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
   const [displayDate, setDisplayDate] = useState<Date>(new Date(today.getFullYear(), today.getMonth(), 1));
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
 
@@ -23,6 +28,9 @@ export default function HomePage() {
     visible: false, text: '', x: 0, y: 0
   });
 
+  const [bindCode, setBindCode] = useState('');
+  const [bindLoading, setBindLoading] = useState(false);
+
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
 
@@ -30,7 +38,13 @@ export default function HomePage() {
   const month = displayDate.getMonth() + 1;
 
   const { data, isLoading } = useCalendar(year, month);
-  const { saveOverride, deleteOverride, revalidateCalendar } = useOverrideMutations(data?.coupleId);
+  const { saveOverride, deleteOverride, revalidateCalendar } = useOverrideMutations();
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
+  }, [status, router]);
 
   const cells = useMemo(() => {
     if (!data) return [];
@@ -120,7 +134,6 @@ export default function HomePage() {
     try {
       await saveOverride(currentModalDate, editSelectedStatus as CalendarCell['status']);
       await revalidateCalendar(year, month);
-      // Also revalidate adjacent months in case cross-month grid is affected
       const prevMonth = new Date(displayDate);
       prevMonth.setMonth(prevMonth.getMonth() - 1);
       await revalidateCalendar(prevMonth.getFullYear(), prevMonth.getMonth() + 1);
@@ -154,6 +167,25 @@ export default function HomePage() {
 
   const closeEditModal = () => {
     setEditModalOpen(false);
+  };
+
+  const handleBindCouple = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bindCode.trim()) return;
+    setBindLoading(true);
+    const res = await fetch('/api/user/bind-couple', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ inviteCode: bindCode.trim() }),
+    });
+    const data = await res.json();
+    if (res.ok) {
+      showToast('绑定成功');
+      window.location.reload();
+    } else {
+      showToast(data.error || '绑定失败');
+    }
+    setBindLoading(false);
   };
 
   // 键盘与触摸事件
@@ -261,6 +293,16 @@ export default function HomePage() {
     return `修改 ${currentModalDate} ${weekdays[new Date(currentModalDate).getDay()]} 的日程`;
   }, [currentModalDate]);
 
+  if (status === 'loading') {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f3f0', color: '#888' }}>
+        加载中...
+      </div>
+    );
+  }
+
+  const hasCouple = !!session?.user?.coupleId;
+
   return (
     <div className="container">
       <header>
@@ -275,6 +317,25 @@ export default function HomePage() {
             <div className="dot-li"></div>
             <span>李 · 标准双休制</span>
           </div>
+        </div>
+        <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 13, opacity: 0.9 }}>
+            {session?.user?.name || session?.user?.email}
+          </span>
+          <button
+            onClick={() => signOut({ callbackUrl: '/login' })}
+            style={{
+              fontSize: 12,
+              padding: '4px 10px',
+              borderRadius: 10,
+              border: '1px solid rgba(255,255,255,0.4)',
+              background: 'rgba(255,255,255,0.15)',
+              color: '#fff',
+              cursor: 'pointer',
+            }}
+          >
+            退出登录
+          </button>
         </div>
       </header>
 
@@ -320,11 +381,56 @@ export default function HomePage() {
         {filterInfoText}
       </div>
 
+      {!hasCouple && (
+        <div style={{ padding: '24px 20px', background: '#faf9f7', borderBottom: '1px solid #e8e6e3' }}>
+          <div style={{ maxWidth: 480, margin: '0 auto', textAlign: 'center' }}>
+            <div style={{ fontSize: 15, color: '#3d3d3d', marginBottom: 8, fontWeight: 500 }}>
+              你还没有绑定日历组
+            </div>
+            <div style={{ fontSize: 13, color: '#888', marginBottom: 16 }}>
+              请输入对方分享的邀请码，加入同一个日程日历
+            </div>
+            <form onSubmit={handleBindCouple} style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <input
+                type="text"
+                value={bindCode}
+                onChange={(e) => setBindCode(e.target.value)}
+                placeholder="输入邀请码"
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: 12,
+                  border: '1px solid #d0ccc5',
+                  fontSize: 14,
+                  minWidth: 200,
+                  outline: 'none',
+                }}
+              />
+              <button
+                type="submit"
+                disabled={bindLoading}
+                style={{
+                  padding: '10px 18px',
+                  borderRadius: 12,
+                  border: 'none',
+                  background: '#8b7d6b',
+                  color: '#fff',
+                  fontSize: 14,
+                  cursor: bindLoading ? 'not-allowed' : 'pointer',
+                  opacity: bindLoading ? 0.7 : 1,
+                }}
+              >
+                {bindLoading ? '绑定中...' : '绑定'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="calendar-wrapper">
         {isLoading && !data && (
           <div style={{ textAlign: 'center', padding: 40, color: '#888' }}>加载中...</div>
         )}
-        <div className="calendar-grid">
+        <div className="calendar-grid" style={!hasCouple ? { opacity: 0.4, pointerEvents: 'none' } : undefined}>
           {cells.map((cell) => {
             const classNames = [
               'day-cell',
