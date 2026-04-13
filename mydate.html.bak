@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>饶 & 李 的日程对照表</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: #f5f3f0;
+            min-height: 100vh;
+            padding: 16px;
+            color: #4a4a4a;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+
+        header {
+            background: #8b7d6b;
+            color: #ffffff;
+            padding: 28px 24px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.8em;
+            margin-bottom: 6px;
+            font-weight: 500;
+            letter-spacing: 3px;
+        }
+
+        .subtitle {
+            font-size: 0.9em;
+            opacity: 0.9;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .couple-info {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+
+        .person-tag {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.15);
+            padding: 5px 12px;
+            border-radius: 14px;
+            font-size: 0.8em;
+        }
+
+        .dot-rao { width: 8px; height: 8px; border-radius: 50%; background: #f4c2c2; }
+        .dot-li { width: 8px; height: 8px; border-radius: 50%; background: #a8d5c5; }
+
+        .top-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: #faf9f7;
+            border-bottom: 1px solid #e8e6e3;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .nav-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #ffffff;
+            padding: 4px;
+            border-radius: 20px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            border: 1px solid #e0ddd8;
+        }
+
+        .btn {
+            background: #ffffff;
+            color: #5a5a5a;
+            border: 1px solid #d0ccc5;
+            padding: 8px 16px;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            background: #f5f3f0;
+            border-color: #b8b4ad;
+        }
+
+        .btn-today {
+            background: #8b7d6b;
+            color: white;
+            border-color: #8b7d6b;
+        }
+
+        .btn-today:hover {
+            background: #7a6d5c;
+        }
+
+        .btn-clear {
+            background: #f0f0f0;
+            color: #666;
+            border-color: #d0ccc5;
+            font-size: 12px;
+            padding: 6px 12px;
+        }
+
+        .btn-clear:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-nav {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .month-year {
+            font-size: 1.2em;
+            font-weight: 500;
+            color: #3d3d3d;
+            min-width: 120px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .filter-section {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 16px;
+            border: 2px solid transparent;
+            background: #ffffff;
+            cursor: pointer;
+            font-size: 12px;
+            color: #666;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+        }
+
+        .filter-btn.active {
+            font-weight: 600;
+            color: #3d3d3d;
+        }
+
+        .filter-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .filter-btn.active::after {
+            content: '✓';
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 16px;
+            height: 16px;
+            background: #8b7d6b;
+            color: white;
+            border-radius: 50%;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .filter-btn[data-filter="rao-day"] .filter-dot { background: #d4e4f0; border: 1px solid #a8c8dc; }
+        .filter-btn[data-filter="rao-night"] .filter-dot { background: #4a5568; }
+        .filter-btn[data-filter="rao-rest"] .filter-dot { background: #f4c2c2; }
+        .filter-btn[data-filter="li-rest"] .filter-dot { background: #a8d5c5; }
+        .filter-btn[data-filter="both-rest"] .filter-dot { background: #2d5a4e; }
+
+        .filter-btn[data-filter="rao-day"].active { border-color: #a8c8dc; background: #e8f4f8; }
+        .filter-btn[data-filter="rao-night"].active { border-color: #4a5568; background: #4a5568; color: white; }
+        .filter-btn[data-filter="rao-rest"].active { border-color: #f4c2c2; background: #fdf2f2; }
+        .filter-btn[data-filter="li-rest"].active { border-color: #a8d5c5; background: #e8f4f0; }
+        .filter-btn[data-filter="both-rest"].active { 
+            border-color: #2d5a4e; 
+            background: #2d5a4e; 
+            color: white;
+        }
+
+        .calendar-wrapper {
+            padding: 20px;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 8px;
+        }
+
+        .day-cell {
+            aspect-ratio: 1;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            background: #ffffff;
+            border: 2px solid transparent;
+            opacity: 1;
+        }
+
+        .day-cell.dimmed {
+            opacity: 0.15;
+            transform: scale(0.95);
+        }
+
+        .day-cell.highlighted {
+            transform: scale(1.08);
+            z-index: 10;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+
+        .day-cell:hover {
+            transform: scale(1.05);
+            z-index: 5;
+        }
+
+        .day-cell.highlighted:hover {
+            transform: scale(1.12);
+        }
+
+        .day-cell.manual-edit::after {
+            content: '✎';
+            position: absolute;
+            bottom: 2px;
+            left: 2px;
+            font-size: 0.6em;
+            color: #8b7d6b;
+            opacity: 0.7;
+        }
+
+        .day-number {
+            font-size: 1.1em;
+            font-weight: 500;
+            margin-bottom: 2px;
+            color: #4a4a4a;
+        }
+
+        .day-lunar {
+            font-size: 0.6em;
+            opacity: 0.5;
+            color: #888;
+        }
+
+        .day-tags {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .day-tag {
+            font-size: 0.55em;
+            padding: 2px 4px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.95);
+            color: #666;
+        }
+
+        .status-rao-day { 
+            background: #e8f4f8; 
+            border-color: #d4e4f0; 
+        }
+        .status-rao-night { 
+            background: #4a5568; 
+            border-color: #2d3748; 
+        }
+        .status-rao-night .day-number {
+            color: #ffffff !important;
+            font-weight: 600;
+        }
+        .status-rao-night .day-lunar {
+            color: rgba(255,255,255,0.7) !important;
+        }
+        .status-rao-rest { background: #fdf2f2; border-color: #f4c2c2; }
+        .status-li-rest { background: #c8e6d5; border-color: #a8d5c5; }
+
+        .status-both-rest { 
+            background: #2d5a4e !important;
+            border: 2px solid #1a3d33 !important;
+            box-shadow: 0 4px 12px rgba(45, 90, 78, 0.3);
+        }
+
+        .status-both-rest .day-number {
+            color: #ffffff !important;
+            font-weight: 700;
+        }
+
+        .status-both-rest .day-lunar {
+            color: rgba(255,255,255,0.7) !important;
+        }
+
+        .is-today {
+            border: 2px solid #8b7d6b !important;
+            box-shadow: inset 0 0 0 2px rgba(139, 125, 107, 0.2) !important;
+        }
+
+        .other-month {
+            opacity: 0.3;
+            background: #f5f3f0 !important;
+        }
+
+        .bottom-stats {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            padding: 20px;
+            background: #faf9f7;
+            border-top: 1px solid #e8e6e3;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 12px 20px;
+            border-radius: 16px;
+            background: #ffffff;
+            min-width: 90px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .stat-item.active {
+            transform: scale(1.05);
+            font-weight: 600;
+        }
+
+        .stat-item.active[data-stat="rao-day"] { border-color: #a8c8dc; background: #e8f4f8; }
+        .stat-item.active[data-stat="rao-night"] { border-color: #4a5568; background: #4a5568; color: white; }
+        .stat-item.active[data-stat="rao-rest"] { border-color: #f4c2c2; background: #fdf2f2; }
+        .stat-item.active[data-stat="li-rest"] { border-color: #a8d5c5; background: #e8f4f0; }
+        .stat-item.active[data-stat="both-rest"] { 
+            border-color: #2d5a4e; 
+            background: #2d5a4e; 
+            color: white;
+        }
+
+        .stat-item.active::after {
+            content: '✓';
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 18px;
+            height: 18px;
+            background: #8b7d6b;
+            color: white;
+            border-radius: 50%;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .stat-item.active[data-stat="rao-night"] .stat-label,
+        .stat-item.active[data-stat="both-rest"] .stat-label {
+            color: rgba(255,255,255,0.9);
+        }
+
+        .stat-number {
+            font-size: 1.6em;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #3d3d3d;
+        }
+
+        .stat-label {
+            color: #888;
+            font-size: 0.75em;
+        }
+
+        .filter-info {
+            text-align: center;
+            padding: 8px 20px;
+            background: #f0f0f0;
+            color: #666;
+            font-size: 0.85em;
+            border-bottom: 1px solid #e8e6e3;
+        }
+
+        .filter-info.active {
+            background: #e8f4f0;
+            color: #2d5a4e;
+            font-weight: 500;
+        }
+
+        .tooltip {
+            position: fixed;
+            background: rgba(45, 90, 78, 0.95);
+            color: #ffffff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.8em;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+            white-space: nowrap;
+        }
+
+        .edit-modal .modal-content {
+            max-width: 360px;
+        }
+
+        .edit-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .edit-option {
+            padding: 16px;
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .edit-option:hover {
+            border-color: #8b7d6b;
+            transform: translateY(-2px);
+        }
+
+        .edit-option.selected {
+            border-color: #8b7d6b;
+            background: #faf9f7;
+        }
+
+        .edit-option .option-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #3d3d3d;
+        }
+
+        .edit-option .option-desc {
+            font-size: 0.8em;
+            color: #888;
+        }
+
+        .edit-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-primary {
+            background: #8b7d6b;
+            color: white;
+            border-color: #8b7d6b;
+        }
+
+        .btn-primary:hover {
+            background: #7a6d5c;
+        }
+
+        .btn-danger {
+            background: #c97b7b;
+            color: white;
+            border-color: #c97b7b;
+        }
+
+        .btn-danger:hover {
+            background: #b56a6a;
+        }
+
+        .edit-hint {
+            font-size: 0.85em;
+            color: #888;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.3);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-content {
+            background: #ffffff;
+            padding: 24px;
+            border-radius: 20px;
+            max-width: 300px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+
+        .modal-date {
+            font-size: 1.1em;
+            font-weight: 500;
+            margin-bottom: 12px;
+            color: #3d3d3d;
+        }
+
+        .modal-status {
+            font-size: 0.9em;
+            padding: 10px 20px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+            display: inline-block;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .modal-details {
+            color: #666;
+            font-size: 0.85em;
+            line-height: 1.5;
+            margin: 12px 0;
+        }
+
+        .close-btn {
+            background: #f0f0f0;
+            border: none;
+            padding: 8px 24px;
+            border-radius: 16px;
+            cursor: pointer;
+            margin-top: 8px;
+            font-size: 0.9em;
+            color: #5a5a5a;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(45, 90, 78, 0.95);
+            color: #ffffff;
+            padding: 12px 24px;
+            border-radius: 24px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 2000;
+            font-size: 0.9em;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        @media (max-width: 768px) {
+            .top-controls {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .filter-section {
+                justify-content: center;
+            }
+
+            .calendar-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 6px;
+            }
+
+            .day-cell {
+                aspect-ratio: auto;
+                min-height: 70px;
+            }
+
+            .bottom-stats {
+                gap: 10px;
+            }
+
+            .stat-item {
+                min-width: 70px;
+                padding: 10px 14px;
+            }
+
+            .edit-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+<base target="_blank">
+<base target="_blank">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>饶 & 李 的日程对照表</h1>
+            <p class="subtitle">两个人的时间，找到交集</p>
+            <div class="couple-info">
+                <div class="person-tag">
+                    <div class="dot-rao"></div>
+                    <span>饶 · 9天周期制（4白+3晚+2休）</span>
+                </div>
+                <div class="person-tag">
+                    <div class="dot-li"></div>
+                    <span>李 · 标准双休制</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="top-controls">
+            <div class="nav-section">
+                <div class="nav-group">
+                    <button class="btn btn-nav" onclick="changeMonth(-1)">‹</button>
+                    <div class="month-year" id="monthYear">2026年4月</div>
+                    <button class="btn btn-nav" onclick="changeMonth(1)">›</button>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <button class="filter-btn" data-filter="rao-day" onclick="toggleFilter('rao-day')">
+                    <div class="filter-dot"></div>
+                    <span>饶白班</span>
+                </button>
+                <button class="filter-btn" data-filter="rao-night" onclick="toggleFilter('rao-night')">
+                    <div class="filter-dot"></div>
+                    <span>饶晚班</span>
+                </button>
+                <button class="filter-btn" data-filter="rao-rest" onclick="toggleFilter('rao-rest')">
+                    <div class="filter-dot"></div>
+                    <span>饶休息日</span>
+                </button>
+                <button class="filter-btn" data-filter="li-rest" onclick="toggleFilter('li-rest')">
+                    <div class="filter-dot"></div>
+                    <span>李休息日</span>
+                </button>
+                <button class="filter-btn" data-filter="both-rest" onclick="toggleFilter('both-rest')">
+                    <div class="filter-dot"></div>
+                    <span>两人同休</span>
+                </button>
+                <button class="btn btn-clear" onclick="clearAllFilters()" id="clearFilterBtn" style="display:none;">
+                    清除筛选
+                </button>
+            </div>
+
+            <button class="btn btn-today" onclick="goToToday()">今天</button>
+        </div>
+
+        <div class="filter-info" id="filterInfo">
+            点击上方按钮可多选筛选，显示所有选中状态的日期
+        </div>
+
+        <div class="calendar-wrapper">
+            <div class="calendar-grid" id="calendar"></div>
+        </div>
+
+        <!-- <div class="bottom-stats" id="bottomStats">
+            <div class="stat-item" data-stat="rao-day" onclick="toggleFilter('rao-day')">
+                <div class="stat-number" id="stat-rao-day">-</div>
+                <div class="stat-label">饶白班</div>
+            </div>
+            <div class="stat-item" data-stat="rao-night" onclick="toggleFilter('rao-night')">
+                <div class="stat-number" id="stat-rao-night">-</div>
+                <div class="stat-label">饶晚班</div>
+            </div>
+            <div class="stat-item" data-stat="rao-rest" onclick="toggleFilter('rao-rest')">
+                <div class="stat-number" id="stat-rao-rest">-</div>
+                <div class="stat-label">饶休息日</div>
+            </div>
+            <div class="stat-item" data-stat="li-rest" onclick="toggleFilter('li-rest')">
+                <div class="stat-number" id="stat-li-rest">-</div>
+                <div class="stat-label">李休息日</div>
+            </div>
+            <div class="stat-item" data-stat="both-rest" onclick="toggleFilter('both-rest')">
+                <div class="stat-number" id="stat-both-rest">-</div>
+                <div class="stat-label">两人同休</div>
+            </div>
+        </div> -->
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+    <div class="toast" id="toast"></div>
+
+    <div class="modal" id="viewModal" onclick="closeViewModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-date" id="viewModalDate"></div>
+            <div class="modal-status" id="viewModalStatus"></div>
+            <div class="modal-details" id="viewModalDetails"></div>
+            <button class="btn btn-primary" onclick="openEditModal()" style="margin-top: 12px;">修改</button>
+            <button class="close-btn" onclick="closeViewModal()" style="margin-left: 8px;">关闭</button>
+        </div>
+    </div>
+
+    <div class="modal edit-modal" id="editModal" onclick="closeEditModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-date" id="editModalDate">修改日程</div>
+
+            <div class="edit-options">
+                <div class="edit-option" data-status="rao-day" onclick="selectEditOption('rao-day')">
+                    <div class="option-title">☀️ 饶白班</div>
+                    <div class="option-desc">饶上白班（1-4天）</div>
+                </div>
+                <div class="edit-option" data-status="rao-night" onclick="selectEditOption('rao-night')">
+                    <div class="option-title">🌙 饶晚班</div>
+                    <div class="option-desc">饶上晚班（5-7天）</div>
+                </div>
+                <div class="edit-option" data-status="rao-rest" onclick="selectEditOption('rao-rest')">
+                    <div class="option-title">☕ 饶休息日</div>
+                    <div class="option-desc">仅饶休息</div>
+                </div>
+                <div class="edit-option" data-status="li-rest" onclick="selectEditOption('li-rest')">
+                    <div class="option-title">📚 李休息日</div>
+                    <div class="option-desc">仅李休息</div>
+                </div>
+                <div class="edit-option" data-status="both-rest" onclick="selectEditOption('both-rest')">
+                    <div class="option-title">✨ 两人同休</div>
+                    <div class="option-desc">两人都有空</div>
+                </div>
+            </div>
+
+            <div class="edit-actions">
+                <button class="btn btn-secondary" onclick="closeEditModal()">取消</button>
+                <button class="btn btn-danger" onclick="clearManualEdit()">恢复自动</button>
+                <button class="btn btn-primary" onclick="saveEdit()">保存</button>
+            </div>
+
+            <div class="edit-hint">
+                提示：手动修改后会覆盖自动计算，点击"恢复自动"可还原
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 2026年法定节假日
+        const holidays2026 = {
+            '2026-01-01': '元旦', '2026-01-02': '元旦', '2026-01-03': '元旦',
+            '2026-02-15': '春节', '2026-02-16': '春节', '2026-02-17': '春节', 
+            '2026-02-18': '春节', '2026-02-19': '春节', '2026-02-20': '春节',
+            '2026-02-21': '春节', '2026-02-22': '春节', '2026-02-23': '春节',
+            '2026-04-04': '清明节', '2026-04-05': '清明节', '2026-04-06': '清明节',
+            '2026-05-01': '劳动节', '2026-05-02': '劳动节', '2026-05-03': '劳动节',
+            '2026-05-04': '劳动节', '2026-05-05': '劳动节',
+            '2026-06-19': '端午节', '2026-06-20': '端午节', '2026-06-21': '端午节',
+            '2026-09-25': '中秋节', '2026-09-26': '中秋节', '2026-09-27': '中秋节',
+            '2026-10-01': '国庆节', '2026-10-02': '国庆节', '2026-10-03': '国庆节',
+            '2026-10-04': '国庆节', '2026-10-05': '国庆节', '2026-10-06': '国庆节',
+            '2026-10-07': '国庆节'
+        };
+
+        // 调休上班日
+        const workdays2026 = {
+            '2026-01-04': '元旦调休',
+            '2026-02-14': '春节调休',
+            '2026-02-28': '春节调休',
+            '2026-05-09': '劳动节调休',
+            '2026-09-20': '国庆调休',
+            '2026-10-10': '国庆调休'
+        };
+
+        // 基准日期：2026年4月8日是饶的第7天（晚班第3天）
+        const baseDate = new Date(2026, 3, 8);
+
+        let today = new Date(2026, 3, 13);
+        let displayDate = new Date(today.getFullYear(), today.getMonth(), 1);
+
+        // 多选筛选器 - 使用Set存储多个选中的筛选条件
+        let activeFilters = new Set();
+        let manualEdits = {};
+        let currentEditDate = null;
+        let currentEditStatus = null;
+
+        // 获取饶的9天周期位置（1-9）
+        function getRaoCycleDay(date) {
+            const targetDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            const diffTime = targetDate - baseDate;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+            const cycleDay = ((diffDays + 6) % 9 + 9) % 9 + 1;
+            return cycleDay;
+        }
+
+        // 获取饶的班次类型（day/night/rest）
+        function getRaoShiftType(date) {
+            const cycleDay = getRaoCycleDay(date);
+            if (cycleDay >= 1 && cycleDay <= 4) return 'day';   // 白班
+            if (cycleDay >= 5 && cycleDay <= 7) return 'night'; // 晚班
+            return 'rest'; // 休息（第8-9天）
+        }
+
+        function isLiRestDay(date) {
+            const day = date.getDay();
+            const dateStr = formatDateKey(date);
+
+            if (workdays2026[dateStr]) return false;
+            if (day === 0 || day === 6) return true;
+            if (holidays2026[dateStr]) return true;
+            return false;
+        }
+
+        // 获取日期状态（UI显示用）
+        function getDayStatus(date) {
+            const dateStr = formatDateKey(date);
+
+            if (manualEdits.hasOwnProperty(dateStr)) {
+                return manualEdits[dateStr];
+            }
+
+            const shiftType = getRaoShiftType(date);
+            const liRest = isLiRestDay(date);
+
+            if (shiftType === 'rest') {
+                return liRest ? 'both-rest' : 'rao-rest';
+            }
+
+            // 饶上班时，如果李休息，显示为'li-rest'
+            if (liRest) {
+                return 'li-rest';
+            }
+
+            // 否则根据班次显示
+            if (shiftType === 'day') return 'rao-day';
+            if (shiftType === 'night') return 'rao-night';
+
+            return 'rao-day';
+        }
+
+        function formatDateKey(date) {
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        // 核心修复：检查日期是否应该被高亮
+        // 饶白班筛选：匹配所有饶上白班的日子（包括李休息的li-rest状态）
+        // 饶晚班筛选：匹配所有饶上晚班的日子（包括李休息的li-rest状态）
+        function shouldHighlight(date, status) {
+            if (activeFilters.size === 0) return true;
+
+            const shiftType = getRaoShiftType(date);
+
+            for (let filter of activeFilters) {
+                // 直接状态匹配
+                if (filter === status) return true;
+
+                // 饶白班筛选：匹配rao-day，或li-rest但饶实际上白班
+                if (filter === 'rao-day' && shiftType === 'day') return true;
+
+                // 饶晚班筛选：匹配rao-night，或li-rest但饶实际上晚班
+                if (filter === 'rao-night' && shiftType === 'night') return true;
+
+                // 饶休息日筛选：也包含两人同休
+                if (filter === 'rao-rest' && (status === 'rao-rest' || status === 'both-rest')) return true;
+
+                // 李休息日筛选：也包含两人同休
+                if (filter === 'li-rest' && (status === 'li-rest' || status === 'both-rest')) return true;
+            }
+            return false;
+        }
+
+        function generateCalendar() {
+            const year = displayDate.getFullYear();
+            const month = displayDate.getMonth();
+
+            document.getElementById('monthYear').textContent = `${year}年${month + 1}月`;
+
+            const firstDay = new Date(year, month, 1);
+            const startOffset = (firstDay.getDay() + 6) % 8;
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - startOffset);
+
+            const calendar = document.getElementById('calendar');
+            calendar.innerHTML = '';
+
+            let stats = {
+                'rao-day': 0,
+                'rao-night': 0,
+                'rao-rest': 0,
+                'li-rest': 0,
+                'both-rest': 0
+            };
+
+            // 扩展统计：饶白班总数（包括li-rest中的白班）
+            let raoDayTotal = 0;
+            let raoNightTotal = 0;
+
+            const todayStr = formatDateKey(today);
+
+            for (let i = 0; i < 40; i++) {
+                const cellDate = new Date(startDate);
+                cellDate.setDate(startDate.getDate() + i);
+
+                const dateStr = formatDateKey(cellDate);
+                const status = getDayStatus(cellDate);
+                const cycleDay = getRaoCycleDay(cellDate);
+                const shiftType = getRaoShiftType(cellDate);
+                const isCurrentMonth = cellDate.getMonth() === month;
+                const isToday = dateStr === todayStr;
+                const isManualEdit = manualEdits.hasOwnProperty(dateStr);
+
+                const cell = document.createElement('div');
+                cell.className = `day-cell status-${status}`;
+                cell.dataset.status = status;
+                cell.dataset.date = dateStr;
+
+                if (isToday) cell.classList.add('is-today');
+                if (!isCurrentMonth) cell.classList.add('other-month');
+                if (isManualEdit) cell.classList.add('manual-edit');
+
+                // 使用修复后的筛选逻辑
+                if (activeFilters.size > 0) {
+                    if (shouldHighlight(cellDate, status)) {
+                        cell.classList.add('highlighted');
+                    } else {
+                        cell.classList.add('dimmed');
+                    }
+                }
+
+                // 统计逻辑（按显示状态统计）
+                if (isCurrentMonth) {
+                    stats[status]++;
+
+                    // 统计饶白班总数（用于统计展示）
+                    if (shiftType === 'day') raoDayTotal++;
+                    if (shiftType === 'night') raoNightTotal++;
+                }
+
+                let tags = '';
+                if (status === 'both-rest') {
+                    tags += `<div class="day-tag">同休</div>`;
+                } else if (holidays2026[dateStr]) {
+                    tags += `<div class="day-tag">节</div>`;
+                } else if (workdays2026[dateStr]) {
+                    tags += `<div class="day-tag">班</div>`;
+                }
+
+                // 显示饶的班次标记
+                if (!isManualEdit && (status === 'rao-day' || status === 'rao-night' || 
+                    (status === 'li-rest' && shiftType !== 'rest'))) {
+                    const shiftText = shiftType === 'day' ? '白' : (shiftType === 'night' ? '晚' : '');
+                    if (shiftText) {
+                        tags += `<div class="day-tag" style="color:${shiftType === 'night' ? '#666' : '#666'}">${shiftText}</div>`;
+                    }
+                }
+
+                cell.innerHTML = `
+                    <div class="day-number">${cellDate.getDate()}</div>
+                    <div class="day-lunar">${getLunarDate(cellDate)}</div>
+                    <div class="day-tags">${tags}</div>
+                `;
+
+                cell.onclick = () => openViewModal(cellDate, status, cycleDay, shiftType);
+                cell.onmouseenter = (e) => showTooltip(e, cellDate, status, cycleDay, shiftType);
+                cell.onmouseleave = hideTooltip;
+
+                calendar.appendChild(cell);
+            }
+
+            // 更新统计（显示实际班次统计而非仅显示状态统计）
+            document.getElementById('stat-rao-day').textContent = raoDayTotal;
+            document.getElementById('stat-rao-night').textContent = raoNightTotal;
+            document.getElementById('stat-rao-rest').textContent = stats['rao-rest'] + stats['both-rest'];
+            document.getElementById('stat-li-rest').textContent = stats['li-rest'];
+            document.getElementById('stat-both-rest').textContent = stats['both-rest'];
+
+            updateFilterUI();
+            updateFilterInfo();
+        }
+
+        // 切换筛选器（多选）
+        function toggleFilter(filter) {
+            if (activeFilters.has(filter)) {
+                activeFilters.delete(filter);
+            } else {
+                activeFilters.add(filter);
+            }
+            generateCalendar();
+        }
+
+        // 清除所有筛选
+        function clearAllFilters() {
+            activeFilters.clear();
+            generateCalendar();
+        }
+
+        function updateFilterUI() {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (activeFilters.has(btn.dataset.filter)) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            document.querySelectorAll('.stat-item').forEach(item => {
+                if (activeFilters.has(item.dataset.stat)) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+
+            const clearBtn = document.getElementById('clearFilterBtn');
+            if (activeFilters.size > 0) {
+                clearBtn.style.display = 'inline-block';
+            } else {
+                clearBtn.style.display = 'none';
+            }
+        }
+
+        function updateFilterInfo() {
+            const filterInfo = document.getElementById('filterInfo');
+            if (activeFilters.size === 0) {
+                filterInfo.textContent = '点击上方按钮可多选筛选，显示所有选中状态的日期';
+                filterInfo.classList.remove('active');
+            } else {
+                const filterNames = {
+                    'rao-day': '饶白班',
+                    'rao-night': '饶晚班',
+                    'rao-rest': '饶休息日',
+                    'li-rest': '李休息日',
+                    'both-rest': '两人同休'
+                };
+                const selectedNames = Array.from(activeFilters).map(f => filterNames[f]).join('、');
+                filterInfo.textContent = `当前筛选：${selectedNames}（${Array.from(activeFilters).length}项）- 白/晚班筛选包含所有对应班次`;
+                filterInfo.classList.add('active');
+            }
+        }
+
+        function openViewModal(date, status, cycleDay, shiftType) {
+            currentEditDate = date;
+            currentEditStatus = status;
+
+            const dateStr = formatDateKey(date);
+            const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+            const dayOfWeek = date.getDay();
+
+            document.getElementById('viewModalDate').textContent = `${dateStr} ${weekdays[dayOfWeek]}`;
+
+            const statusDiv = document.getElementById('viewModalStatus');
+            let detailText = '';
+            let isManual = manualEdits.hasOwnProperty(dateStr);
+            let manualHint = isManual ? '<br><span style="color:#8b7d6b;font-size:0.85em">（已手动修改）</span>' : '';
+
+            switch(status) {
+                case 'both-rest':
+                    statusDiv.textContent = '两人同休';
+                    statusDiv.style.background = '#2d5a4e';
+                    detailText = '今天两人都有空，可以一起安排活动';
+                    break;
+                case 'rao-rest':
+                    statusDiv.textContent = '仅饶休息';
+                    statusDiv.style.background = '#c97b7b';
+                    detailText = '饶今天休息，李在上班';
+                    break;
+                case 'li-rest':
+                    statusDiv.textContent = '李休息日';
+                    statusDiv.style.background = '#7db9a8';
+                    detailText = `李今天休息，饶${shiftType === 'day' ? '上白班' : '上晚班'}`;
+                    break;
+                case 'rao-day':
+                    statusDiv.textContent = '饶白班';
+                    statusDiv.style.background = '#a8c8dc';
+                    statusDiv.style.color = '#3d3d3d';
+                    detailText = '饶上白班（第' + cycleDay + '天），李在上班';
+                    break;
+                case 'rao-night':
+                    statusDiv.textContent = '饶晚班';
+                    statusDiv.style.background = '#4a5568';
+                    statusDiv.style.color = '#ffffff';
+                    detailText = '饶上晚班（第' + cycleDay + '天），李在上班';
+                    break;
+            }
+
+            const cycleInfo = `饶处于9天周期第${cycleDay}天`;
+            document.getElementById('viewModalDetails').innerHTML = `${detailText}${manualHint}<br><span style="color:#999;font-size:0.85em">${cycleInfo}</span>`;
+
+            document.getElementById('viewModal').style.display = 'flex';
+        }
+
+        function closeViewModal(event) {
+            if (!event || event.target.id === 'viewModal') {
+                document.getElementById('viewModal').style.display = 'none';
+            }
+        }
+
+        function openEditModal() {
+            closeViewModal();
+
+            const dateStr = formatDateKey(currentEditDate);
+            const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+            const dayOfWeek = currentEditDate.getDay();
+
+            document.getElementById('editModalDate').textContent = `修改 ${dateStr} ${weekdays[dayOfWeek]} 的日程`;
+
+            document.querySelectorAll('.edit-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+
+            const currentStatus = manualEdits[dateStr] || currentEditStatus;
+            const option = document.querySelector(`.edit-option[data-status="${currentStatus}"]`);
+            if (option) {
+                option.classList.add('selected');
+            }
+
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        function selectEditOption(status) {
+            document.querySelectorAll('.edit-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            document.querySelector(`.edit-option[data-status="${status}"]`).classList.add('selected');
+        }
+
+        function saveEdit() {
+            const selectedOption = document.querySelector('.edit-option.selected');
+            if (!selectedOption) {
+                showToast('请选择一个状态');
+                return;
+            }
+
+            const newStatus = selectedOption.dataset.status;
+            const dateStr = formatDateKey(currentEditDate);
+
+            manualEdits[dateStr] = newStatus;
+
+            closeEditModal();
+            generateCalendar();
+            showToast('已保存修改');
+        }
+
+        function clearManualEdit() {
+            const dateStr = formatDateKey(currentEditDate);
+
+            if (manualEdits.hasOwnProperty(dateStr)) {
+                delete manualEdits[dateStr];
+                closeEditModal();
+                generateCalendar();
+                showToast('已恢复自动计算');
+            } else {
+                showToast('当前为自动计算，无需恢复');
+            }
+        }
+
+        function closeEditModal(event) {
+            if (!event || event.target.id === 'editModal') {
+                document.getElementById('editModal').style.display = 'none';
+            }
+        }
+
+        function getLunarDate(date) {
+            const lunarDays = ['初一', '初二', '初三', '初四', '初五', '初六', '初七', '初八', '初九', '初十',
+                              '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十',
+                              '廿一', '廿二', '廿三', '廿四', '廿五', '廿六', '廿七', '廿八', '廿九', '三十'];
+            const offset = Math.floor((date - new Date(2026, 0, 1)) / (1000 * 60 * 60 * 24));
+            return lunarDays[offset % 30] || '初一';
+        }
+
+        function changeMonth(delta) {
+            const newDate = new Date(displayDate);
+            newDate.setMonth(newDate.getMonth() + delta);
+
+            if (newDate.getFullYear() < 2025 || newDate.getFullYear() > 2027) {
+                showToast('只能查看2025-2027年的日程');
+                return;
+            }
+
+            displayDate = newDate;
+            generateCalendar();
+            showToast(`${displayDate.getFullYear()}年${displayDate.getMonth() + 1}月`);
+        }
+
+        function goToToday() {
+            const todayYear = today.getFullYear();
+            const todayMonth = today.getMonth();
+
+            if (displayDate.getFullYear() === todayYear && displayDate.getMonth() === todayMonth) {
+                const cells = document.querySelectorAll('.day-cell');
+                cells.forEach(cell => {
+                    if (cell.classList.contains('is-today')) {
+                        cell.style.transform = 'scale(1.1)';
+                        setTimeout(() => {
+                            cell.style.transform = 'scale(1)';
+                        }, 200);
+                    }
+                });
+                showToast('已在当前月份');
+            } else {
+                displayDate = new Date(todayYear, todayMonth, 1);
+                generateCalendar();
+                showToast(`${todayYear}年${todayMonth + 1}月`);
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        function showTooltip(e, date, status, cycleDay, shiftType) {
+            const tooltip = document.getElementById('tooltip');
+            const dateStr = formatDateKey(date);
+
+            let text = '';
+            switch(status) {
+                case 'both-rest': text = '两人同休'; break;
+                case 'rao-rest': text = '仅饶休息'; break;
+                case 'li-rest': text = '李休息日（饶' + (shiftType === 'day' ? '白班' : '晚班') + ')'; break;
+                case 'rao-day': text = '饶白班'; break;
+                case 'rao-night': text = '饶晚班'; break;
+            }
+
+            if (manualEdits.hasOwnProperty(dateStr)) {
+                text += ' (已修改)';
+            }
+
+            tooltip.textContent = `${dateStr} · ${text}`;
+            tooltip.style.left = e.clientX + 10 + 'px';
+            tooltip.style.top = e.clientY - 30 + 'px';
+            tooltip.style.opacity = '1';
+        }
+
+        function hideTooltip() {
+            document.getElementById('tooltip').style.opacity = '0';
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeViewModal();
+                closeEditModal();
+            }
+            if (e.key === 'ArrowLeft') changeMonth(-1);
+            if (e.key === 'ArrowRight') changeMonth(1);
+            if (e.key === 't' || e.key === 'T') goToToday();
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) changeMonth(1);
+            if (touchEndX > touchStartX + 50) changeMonth(-1);
+        }
+
+        generateCalendar();
+    </script>
+</body>
+</html>
