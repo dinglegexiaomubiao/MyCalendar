@@ -156,7 +156,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div
+        {/* <div
           style={{
             textAlign: "center",
             marginTop: 20,
@@ -165,7 +165,7 @@ export default function LoginPage() {
           }}
         >
           还没有账号？ <Link href="/register" style={{ color: "#8b7d6b" }}>去注册</Link>
-        </div>
+        </div> */}
       </div>
     </div>
   );
