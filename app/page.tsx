@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Solar } from 'lunar-javascript';
 
 // 2026年法定节假日
 const holidays2026: Record<string, string> = {
@@ -31,7 +32,7 @@ const workdays2026: Record<string, string> = {
 // 基准日期：2026年4月8日是饶的第7天（晚班第3天）
 const baseDate = new Date(2026, 3, 8);
 
-const today = new Date(2026, 3, 13);
+const today = new Date();
 
 const filterNames: Record<string, string> = {
   'rao-day': '饶白班',
@@ -101,11 +102,13 @@ function shouldHighlight(date: Date, status: string, activeFilters: string[]) {
 }
 
 function getLunarDate(date: Date) {
-  const lunarDays = ['初一', '初二', '初三', '初四', '初五', '初六', '初七', '初八', '初九', '初十',
-    '十一', '十二', '十三', '十四', '十五', '十六', '十七', '十八', '十九', '二十',
-    '廿一', '廿二', '廿三', '廿四', '廿五', '廿六', '廿七', '廿八', '廿九', '三十'];
-  const offset = Math.floor((date.getTime() - new Date(2026, 0, 1).getTime()) / (1000 * 60 * 60 * 24));
-  return lunarDays[offset % 30] || '初一';
+  const solar = Solar.fromYmd(date.getFullYear(), date.getMonth() + 1, date.getDate());
+  const lunar = solar.getLunar();
+  const day = lunar.getDayInChinese();
+  if (day === '初一') {
+    return lunar.getMonthInChinese() + '月';
+  }
+  return day;
 }
 
 export default function HomePage() {
@@ -266,7 +269,7 @@ export default function HomePage() {
     const year = displayDate.getFullYear();
     const month = displayDate.getMonth();
     const firstDay = new Date(year, month, 1);
-    const startOffset = (firstDay.getDay() + 6) % 8;
+    const startOffset = (firstDay.getDay() + 6) % 7;
     const startDate = new Date(firstDay);
     startDate.setDate(startDate.getDate() - startOffset);
 
