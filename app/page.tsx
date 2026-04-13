@@ -47,7 +47,7 @@ export default function HomePage() {
   }, [status, router]);
 
   const cells = useMemo(() => {
-    if (!data) return [];
+    if (!data || !data.cells) return [];
     if (activeFilters.length === 0) return data.cells;
     return data.cells.map((cell) => ({
       ...cell,
@@ -57,7 +57,7 @@ export default function HomePage() {
   }, [data, activeFilters]);
 
   const currentCell = useMemo(() => {
-    if (!currentModalDate || !data) return null;
+    if (!currentModalDate || !data || !data.cells) return null;
     return data.cells.find((c) => c.date === currentModalDate) || null;
   }, [currentModalDate, data]);
 
@@ -234,7 +234,7 @@ export default function HomePage() {
   const filterInfoActive = activeFilters.length > 0;
 
   const viewModalContent = useMemo(() => {
-    if (!currentCell || !data) return null;
+    if (!currentCell || !data || !data.schedule) return null;
     const dateStr = currentCell.date;
     const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
     const dayOfWeek = new Date(dateStr).getDay();
