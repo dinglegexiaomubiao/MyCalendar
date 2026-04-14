@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth, hasAccess } from "@/lib/auth";
+import { auth } from "@/lib/auth";
+import { hasAccess } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 import { buildMonthCells, DayStatus, formatDateKey } from "@/lib/calendar-logic";
 

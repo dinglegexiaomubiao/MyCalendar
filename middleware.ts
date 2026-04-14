@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { hasAccess } from "@/lib/auth";
+import { hasAccess } from "@/lib/access";
 import { NextResponse } from "next/server";
 
 const PUBLIC_PATHS = ["/login", "/register", "/api/auth", "/api/register"];

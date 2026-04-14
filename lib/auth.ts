@@ -1,14 +1,8 @@
-import "dotenv/config";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
-
-export const ALLOWED_NAMES = ["李", "饶"];
-
-export function hasAccess(name?: string | null) {
-  return !!name && ALLOWED_NAMES.includes(name);
-}
+import { hasAccess } from "./access";
 
 export const {
   handlers: { GET, POST },
