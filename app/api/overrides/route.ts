@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { auth, hasAccess } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { DayStatus } from "@/lib/calendar-logic";
 
@@ -15,6 +15,10 @@ export async function POST(request: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
+  }
+
+  if (!hasAccess(session.user.name)) {
+    return NextResponse.json({ error: "无权限访问该日程表" }, { status: 403 });
   }
 
   const coupleId = session.user.coupleId;
@@ -65,6 +69,10 @@ export async function DELETE(request: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
+  }
+
+  if (!hasAccess(session.user.name)) {
+    return NextResponse.json({ error: "无权限访问该日程表" }, { status: 403 });
   }
 
   const coupleId = session.user.coupleId;

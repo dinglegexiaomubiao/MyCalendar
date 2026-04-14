@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -11,6 +11,15 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("error") === "unauthorized") {
+        setError("您的账号没有权限访问该日程表");
+      }
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +33,11 @@ export default function LoginPage() {
     });
 
     if (res?.error) {
-      setError("邮箱或密码错误");
+      if (res.error === "UNAUTHORIZED_NAME" || res.error.includes("UNAUTHORIZED_NAME")) {
+        setError("抱歉，您的账号没有访问该日程表的权限");
+      } else {
+        setError("邮箱或密码错误");
+      }
       setLoading(false);
     } else {
       router.push("/");

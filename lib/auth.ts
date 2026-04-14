@@ -4,6 +4,12 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 
+export const ALLOWED_NAMES = ["李", "饶"];
+
+export function hasAccess(name?: string | null) {
+  return !!name && ALLOWED_NAMES.includes(name);
+}
+
 export const {
   handlers: { GET, POST },
   auth,
@@ -48,6 +54,10 @@ export const {
             return null;
           }
 
+          if (!hasAccess(user.name)) {
+            throw new Error("UNAUTHORIZED_NAME");
+          }
+
           return {
             id: user.id,
             email: user.email,
@@ -56,6 +66,9 @@ export const {
             coupleId: user.coupleId ?? undefined,
           };
         } catch (e) {
+          if (e instanceof Error && e.message === "UNAUTHORIZED_NAME") {
+            throw e;
+          }
           console.error("Auth authorize error:", e);
           return null;
         }
