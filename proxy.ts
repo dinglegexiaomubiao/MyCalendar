@@ -18,7 +18,15 @@ export async function proxy(req: NextRequest) {
   }
 
   const token = await getToken({ req, secret: process.env.AUTH_SECRET });
+  const isLoggedIn = !!token;
   const name = typeof token?.name === "string" ? token.name : undefined;
+
+  if (!isLoggedIn) {
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "未登录" }, { status: 401 });
+    }
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
 
   if (!name || !ALLOWED_NAMES.includes(name)) {
     if (pathname.startsWith("/api/")) {
