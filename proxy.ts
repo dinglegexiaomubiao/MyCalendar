@@ -21,6 +21,8 @@ export async function proxy(req: NextRequest) {
   const isLoggedIn = !!token;
   const name = typeof token?.name === "string" ? token.name : undefined;
 
+  console.log("[PROXY] pathname:", pathname, "isLoggedIn:", isLoggedIn, "name:", name);
+
   if (!isLoggedIn) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json({ error: "未登录" }, { status: 401 });

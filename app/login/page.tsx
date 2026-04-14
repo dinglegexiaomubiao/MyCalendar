@@ -38,12 +38,16 @@ export default function LoginPage() {
         ),
       ]);
 
+      console.log("[LOGIN] signIn response:", res);
+
       if (res?.error) {
         setError("邮箱或密码错误");
-      } else {
+      } else if (res && !res.error) {
         router.push("/");
         router.refresh();
         return;
+      } else {
+        setError("登录响应异常，请查看浏览器控制台日志");
       }
     } catch (err) {
       if (err instanceof Error && err.message === "TIMEOUT") {

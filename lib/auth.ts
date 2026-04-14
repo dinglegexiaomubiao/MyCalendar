@@ -47,6 +47,7 @@ export const {
             return null;
           }
 
+          console.log("[AUTH] authorize success:", user.email, "name:", user.name);
           return {
             id: user.id,
             email: user.email,
