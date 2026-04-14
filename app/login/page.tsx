@@ -26,19 +26,33 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    const res = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    try {
+      const res = await Promise.race([
+        signIn("credentials", {
+          email,
+          password,
+          redirect: false,
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("TIMEOUT")), 8000)
+        ),
+      ]);
 
-    if (res?.error) {
-      setError("邮箱或密码错误");
-      setLoading(false);
-    } else {
-      router.push("/");
-      router.refresh();
+      if (res?.error) {
+        setError("邮箱或密码错误");
+      } else {
+        router.push("/");
+        router.refresh();
+        return;
+      }
+    } catch (err) {
+      if (err instanceof Error && err.message === "TIMEOUT") {
+        setError("服务器响应超时，请检查 Vercel 环境变量 AUTH_SECRET 是否配置正确");
+      } else {
+        setError("登录异常，请检查 Vercel Function Logs 中的 /api/auth/callback/credentials 报错");
+      }
     }
+    setLoading(false);
   };
 
   return (
