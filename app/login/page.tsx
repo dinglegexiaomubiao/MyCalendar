@@ -33,11 +33,7 @@ export default function LoginPage() {
     });
 
     if (res?.error) {
-      if (res.error === "UNAUTHORIZED_NAME" || res.error.includes("UNAUTHORIZED_NAME")) {
-        setError("抱歉，您的账号没有访问该日程表的权限");
-      } else {
-        setError("邮箱或密码错误");
-      }
+      setError("邮箱或密码错误");
       setLoading(false);
     } else {
       router.push("/");

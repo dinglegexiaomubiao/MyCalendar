@@ -2,7 +2,6 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
-import { hasAccess } from "./access";
 
 export const {
   handlers: { GET, POST },
@@ -48,10 +47,6 @@ export const {
             return null;
           }
 
-          if (!hasAccess(user.name)) {
-            throw new Error("UNAUTHORIZED_NAME");
-          }
-
           return {
             id: user.id,
             email: user.email,
@@ -60,9 +55,6 @@ export const {
             coupleId: user.coupleId ?? undefined,
           };
         } catch (e) {
-          if (e instanceof Error && e.message === "UNAUTHORIZED_NAME") {
-            throw e;
-          }
           console.error("Auth authorize error:", e);
           return null;
         }
