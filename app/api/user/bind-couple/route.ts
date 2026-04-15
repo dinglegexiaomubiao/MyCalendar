@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { hasAccess } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
-  }
-
-  if (!hasAccess(session.user.name)) {
-    return NextResponse.json({ error: "无权限访问该日程表" }, { status: 403 });
   }
 
   try {

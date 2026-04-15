@@ -301,33 +301,6 @@ export default function HomePage() {
     );
   }
 
-  const userName = session?.user?.name;
-  const canAccess = userName === '李' || userName === '饶';
-
-  if (status === 'authenticated' && !canAccess) {
-    return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f5f3f0', flexDirection: 'column', gap: 16, padding: 24 }}>
-        <div style={{ fontSize: 18, color: '#3d3d3d', fontWeight: 500 }}>抱歉，您没有权限访问此日程表</div>
-        <div style={{ fontSize: 14, color: '#888' }}>该日程表仅限特定用户查看</div>
-        <button
-          onClick={() => signOut({ callbackUrl: '/login' })}
-          style={{
-            marginTop: 8,
-            padding: '10px 24px',
-            borderRadius: 14,
-            border: 'none',
-            background: '#8b7d6b',
-            color: '#fff',
-            fontSize: 14,
-            cursor: 'pointer',
-          }}
-        >
-          退出登录
-        </button>
-      </div>
-    );
-  }
-
   const isPrivileged = session?.user?.email === 'dinglegexiaomubiao@gmail.com';
   const hasCouple = !!session?.user?.coupleId || isPrivileged;
 

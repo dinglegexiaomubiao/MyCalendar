@@ -12,14 +12,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("error") === "unauthorized") {
-        setError("您的账号没有权限访问该日程表");
-      }
-    }
-  }, []);
+  // 登录页初始化逻辑占位
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
