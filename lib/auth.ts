@@ -59,9 +59,7 @@ export const {
           return {
             id: user.id,
             email: user.email,
-            name: user.name ?? undefined,
-            image: user.image ?? undefined,
-            coupleId: user.coupleId ?? undefined,
+            name: user.name ?? null,
           };
         } catch (e) {
           console.error("[AUTH] authorize error:", e);
@@ -77,7 +75,6 @@ export const {
           console.log("[AUTH] jwt callback, user:", user.id, user.name);
           token.id = user.id;
           token.name = user.name ?? undefined;
-          token.coupleId = user.coupleId;
         }
         return token;
       } catch (e) {
@@ -90,8 +87,7 @@ export const {
         if (token) {
           console.log("[AUTH] session callback, token.id:", token.id);
           session.user.id = token.id as string;
-          session.user.name = token.name as string | undefined;
-          session.user.coupleId = token.coupleId as string | undefined;
+          session.user.name = token.name as string | null;
         }
         return session;
       } catch (e) {
