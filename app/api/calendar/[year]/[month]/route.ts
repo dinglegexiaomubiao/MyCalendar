@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { hasAccess } from "@/lib/access";
+import { hasAccess, isPrivilegedUser } from "@/lib/access";
+import { ensureDefaultCouple } from "@/lib/init-default";
 import { prisma } from "@/lib/prisma";
 import { buildMonthCells, DayStatus, formatDateKey } from "@/lib/calendar-logic";
 
@@ -17,7 +18,12 @@ export async function GET(
     return NextResponse.json({ error: "无权限访问该日程表" }, { status: 403 });
   }
 
-  const coupleId = session.user.coupleId;
+  let coupleId = session.user.coupleId;
+  if (!coupleId && isPrivilegedUser(session.user.email)) {
+    const defaultCouple = await ensureDefaultCouple();
+    coupleId = defaultCouple.coupleId;
+  }
+
   if (!coupleId) {
     return NextResponse.json({ error: "未绑定日历组" }, { status: 403 });
   }

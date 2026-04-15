@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { hasAccess } from "@/lib/access";
+import { hasAccess, isPrivilegedUser } from "@/lib/access";
+import { ensureDefaultCouple } from "@/lib/init-default";
 import { prisma } from "@/lib/prisma";
 import { DayStatus } from "@/lib/calendar-logic";
 
@@ -12,6 +13,15 @@ const VALID_STATUSES: DayStatus[] = [
   "both-rest",
 ];
 
+async function getCoupleIdForUser(session: { user?: { coupleId?: string; email?: string | null } }) {
+  let coupleId = session.user?.coupleId;
+  if (!coupleId && isPrivilegedUser(session.user?.email)) {
+    const defaultCouple = await ensureDefaultCouple();
+    coupleId = defaultCouple.coupleId;
+  }
+  return coupleId;
+}
+
 export async function POST(request: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -22,7 +32,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "无权限访问该日程表" }, { status: 403 });
   }
 
-  const coupleId = session.user.coupleId;
+  const coupleId = await getCoupleIdForUser(session);
   if (!coupleId) {
     return NextResponse.json({ error: "未绑定日历组" }, { status: 403 });
   }
@@ -76,7 +86,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "无权限访问该日程表" }, { status: 403 });
   }
 
-  const coupleId = session.user.coupleId;
+  const coupleId = await getCoupleIdForUser(session);
   if (!coupleId) {
     return NextResponse.json({ error: "未绑定日历组" }, { status: 403 });
   }
