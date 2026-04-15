@@ -17,11 +17,12 @@ export async function proxy(req: NextRequest) {
     return;
   }
 
-  const token = await getToken({ req, secret: process.env.AUTH_SECRET });
+  const secret = process.env.AUTH_SECRET;
+  const token = await getToken({ req, secret });
   const isLoggedIn = !!token;
   const name = typeof token?.name === "string" ? token.name : undefined;
 
-  console.log("[PROXY] pathname:", pathname, "isLoggedIn:", isLoggedIn, "name:", name);
+  console.log("[PROXY] pathname:", pathname, "hasSecret:", !!secret, "isLoggedIn:", isLoggedIn, "name:", name);
 
   if (!isLoggedIn) {
     if (pathname.startsWith("/api/")) {
