@@ -25,25 +25,33 @@ export const {
         password: { label: "密码", type: "password" },
       },
       async authorize(credentials) {
+        console.log("[AUTH] authorize called, email:", credentials?.email);
         try {
           if (!credentials?.email || !credentials?.password) {
+            console.log("[AUTH] missing credentials");
             return null;
           }
 
+          console.log("[AUTH] querying user...");
           const user = await prisma.user.findUnique({
             where: { email: credentials.email as string },
           });
+          console.log("[AUTH] user found:", !!user);
 
           if (!user || !user.password) {
+            console.log("[AUTH] user not found or no password");
             return null;
           }
 
+          console.log("[AUTH] comparing password...");
           const isValid = await bcrypt.compare(
             credentials.password as string,
             user.password
           );
+          console.log("[AUTH] password valid:", isValid);
 
           if (!isValid) {
+            console.log("[AUTH] password invalid");
             return null;
           }
 
@@ -56,7 +64,7 @@ export const {
             coupleId: user.coupleId ?? undefined,
           };
         } catch (e) {
-          console.error("Auth authorize error:", e);
+          console.error("[AUTH] authorize error:", e);
           return null;
         }
       },
