@@ -72,19 +72,32 @@ export const {
   ],
   callbacks: {
     async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-        token.name = user.name ?? undefined;
-        token.coupleId = user.coupleId;
+      try {
+        if (user) {
+          console.log("[AUTH] jwt callback, user:", user.id, user.name);
+          token.id = user.id;
+          token.name = user.name ?? undefined;
+          token.coupleId = user.coupleId;
+        }
+        return token;
+      } catch (e) {
+        console.error("[AUTH] jwt callback error:", e);
+        throw e;
       }
-      return token;
     },
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string;
-        session.user.coupleId = token.coupleId as string | undefined;
+      try {
+        if (token) {
+          console.log("[AUTH] session callback, token.id:", token.id);
+          session.user.id = token.id as string;
+          session.user.name = token.name as string | undefined;
+          session.user.coupleId = token.coupleId as string | undefined;
+        }
+        return session;
+      } catch (e) {
+        console.error("[AUTH] session callback error:", e);
+        throw e;
       }
-      return session;
     },
   },
 });
