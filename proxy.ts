@@ -1,9 +1,9 @@
-import { getToken } from "next-auth/jwt";
+import { auth } from "@/lib/auth";
+import { hasAccess } from "@/lib/access";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const PUBLIC_PATHS = ["/login", "/register", "/api/auth", "/api/register"];
-const ALLOWED_NAMES = ["李", "饶"];
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -17,12 +17,11 @@ export async function proxy(req: NextRequest) {
     return;
   }
 
-  const secret = process.env.AUTH_SECRET;
-  const token = await getToken({ req, secret });
-  const isLoggedIn = !!token;
-  const name = typeof token?.name === "string" ? token.name : undefined;
+  const session = await auth();
+  const isLoggedIn = !!session?.user;
+  const name = session?.user?.name;
 
-  console.log("[PROXY] pathname:", pathname, "hasSecret:", !!secret, "isLoggedIn:", isLoggedIn, "name:", name);
+  console.log("[PROXY] pathname:", pathname, "isLoggedIn:", isLoggedIn, "name:", name);
 
   if (!isLoggedIn) {
     if (pathname.startsWith("/api/")) {
@@ -31,7 +30,7 @@ export async function proxy(req: NextRequest) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  if (!name || !ALLOWED_NAMES.includes(name)) {
+  if (!name || !hasAccess(name)) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json(
         { error: "无权限访问该日程表" },
